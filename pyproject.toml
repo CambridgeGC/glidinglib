@@ -1,0 +1,11 @@
+[tool.poetry]
+name = "glidinglib"
+version = "0.1.0"
+description = ""
+authors = ["Paul Ruskin"]
+packages = [{ include = "glidinglib", from = "src" }]
+
+[tool.poetry.dependencies]
+python = "^3.13"
+requests = "^2.33.1"
+tzdata = "^2026.2"

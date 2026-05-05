@@ -1,0 +1,28 @@
+{
+  "glidingapp": {
+    "server": "https://admin.zweef.app/club/cgc",
+    "api_key": "API key here",
+    "test_server": "https://admin.zweef.app/club/cgc2",
+    "test_api_key": "API key here",
+    "excluded_accounts": [1, 2, 3, 4, 50010],
+    "data_source": "live"
+  },
+  "aerolog": {
+    "base_url": "https://www.datamodusaerolog.co.uk/alc_api",
+    "email": "AerologCloudAPI_CGC",
+    "password": "password here",
+    "test_base_url": "https://www.datamodusaerolog.co.uk/alc_api",
+    "test_email": "AerologCloudAPI_CGC",
+    "test_password": "password here", 
+    "data_source": "live",  
+    "excluded_types":  ["social", 
+                        "honorary", 
+                        "family", 
+                        "system admin", 
+                        "voucher sales", 
+                        "waived social", 
+                        "herts scouts", 
+                        "nominal", 
+                        "temporary"]
+  }
+} 
