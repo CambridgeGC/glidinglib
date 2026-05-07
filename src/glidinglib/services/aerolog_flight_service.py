@@ -6,9 +6,13 @@ from glidinglib.clients.aerolog_flight_client import AerologFlightClient
 from glidinglib.mappers.aerolog_flight_mapper import (
     map_aerolog_flight,
     map_aerolog_flight_to_import_payload,
+    map_combination_flight_to_import_payload
 )
+from glidinglib.models.combination_flight_model import CombinationFlight
 from glidinglib.models.aerolog_flight_model import AerologFlight
-
+from glidinglib.mappers.glidingapp_combination_flight_mapper import (
+    map_glidingapp_flights_to_combination_flights,
+)
 
 DataSource = Literal["live", "test", "config"]
 
@@ -121,5 +125,40 @@ class AerologFlightService:
             "sent": True,
             "record_count": len(payload),
             "data_source": selected,
+            "response": response,
+        }
+    
+    def send_combination_flight_log_to_aerolog(
+        self,
+        flights: list[CombinationFlight],
+        data_source: DataSource | None = None,
+        dry_run: bool = True,
+    ) -> dict:
+        selected = self._resolve_data_source(data_source)
+
+        payload = [
+            map_combination_flight_to_import_payload(flight)
+            for flight in flights
+        ]
+
+        if selected == "test" or dry_run:
+            return {
+                "status": "dry_run",
+                "sent": False,
+                "record_count": len(payload),
+                "payload": payload,
+                "data_source": selected,
+            }
+
+        client = self._client_for(data_source)
+
+        response = client.send_flight_log_to_aerolog(payload)
+
+        return {
+            "status": "sent",
+            "sent": True,
+            "record_count": len(payload),
+            "data_source": selected,
+            "payload": payload,
             "response": response,
         }

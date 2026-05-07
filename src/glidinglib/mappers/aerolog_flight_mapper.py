@@ -1,10 +1,10 @@
 # src/glidinglib/mappers/aerolog_flight_mapper.py
 
-from datetime import datetime, date, time
 from typing import Any, Optional
 
 from glidinglib.models.aerolog_flight_model import AerologFlight
-
+from datetime import datetime, date, time, timedelta
+from glidinglib.models.combination_flight_model import CombinationFlight
 
 GET_LAUNCH_METHOD_MAP = {
     "W": "winch",
@@ -97,6 +97,155 @@ def _put_if_present(payload: dict[str, Any], key: str, value: Any) -> None:
     if value not in (None, ""):
         payload[key] = value
 
+def _minutes_between(start: time | None, end: time | None) -> int:
+    if not start or not end:
+        return 0
+
+    today = date.today()
+    start_dt = datetime.combine(today, start)
+    end_dt = datetime.combine(today, end)
+
+    if end_dt < start_dt:
+        end_dt += timedelta(days=1)
+
+    return int((end_dt - start_dt).total_seconds() // 60)
+
+
+def _duration_minutes(
+    duration: Any,
+    start: time | None,
+    end: time | None,
+) -> int:
+    if duration not in (None, ""):
+        try:
+            return int(duration)
+        except (TypeError, ValueError):
+            pass
+
+    return _minutes_between(start, end)
+
+
+def _aircraft_type_for_combination(flight: CombinationFlight) -> str:
+    launch = (flight.launch_method or "").strip().lower()
+    registration = (flight.registration or "").strip().upper()
+    callsign = (flight.callsign or "").strip().upper()
+
+    if launch == "tmg" or registration in {"G-BODU", "G-CGWP"} or callsign in {"DU", "WP"}:
+        return "TMG"
+
+    if launch == "self-launch":
+        return "SLG"
+
+    return "GLD"
+
+
+def _launch_type_for_combination(flight: CombinationFlight) -> str:
+    launch = (flight.launch_method or "").strip().lower()
+
+    if launch == "aerotow":
+        return "A"
+
+    if launch == "winch":
+        return "W"
+
+    if launch in {"self-launch", "tmg"}:
+        return "S"
+
+    return PUT_LAUNCH_METHOD_MAP.get(launch, launch)
+
+
+def _payment_fields(
+    pic_account: str,
+    p2_account: str,
+    payer_account: str,
+) -> tuple[Any, Any, str]:
+    pic_account = (pic_account or "").strip()
+    p2_account = (p2_account or "").strip()
+    payer_account = (payer_account or "").strip()
+
+    p1_share = ""
+    p2_share = ""
+    third_party = ""
+
+    if payer_account and pic_account and payer_account == pic_account:
+        p1_share = 100
+    elif payer_account and p2_account and payer_account == p2_account:
+        p2_share = 100
+    elif payer_account:
+        third_party = payer_account
+
+    return p1_share, p2_share, third_party
+
+
+def map_combination_flight_to_import_payload(
+    flight: CombinationFlight,
+) -> dict[str, Any]:
+    if flight.sync_key is None:
+        raise ValueError("sync_key is required for Aerolog import")
+
+    pic_account = flight.pic_membership_number or ""
+    p2_account = flight.p2_membership_number or ""
+    payer_account = flight.paying_pilot_membership_number or ""
+
+    p1_share, p2_share, third_party_account = _payment_fields(
+        pic_account=pic_account,
+        p2_account=p2_account,
+        payer_account=payer_account,
+    )
+
+    guest_name = ""
+    if (flight.p2_name or "").strip() and not p2_account:
+        guest_name = flight.p2_name.strip()
+
+    flight_time_minutes = _duration_minutes(
+        flight.duration_minutes,
+        flight.takeoff_time,
+        flight.landing_time,
+    )
+
+    tug_time_minutes = _duration_minutes(
+        flight.tow_duration_minutes,
+        flight.tow_takeoff_time,
+        flight.tow_landing_time,
+    )
+
+    return {
+        "FlightDate": _format_date(flight.flight_date),
+        "SyncKey": flight.sync_key,
+
+        "AircraftRegistration": flight.registration or "",
+        "AircraftType": _aircraft_type_for_combination(flight),
+        "AircraftModel": flight.aircraft_type or "",
+
+        "AccCodeP1": pic_account,
+        "AccCodeP2": p2_account,
+
+        "AirfieldTakeOff": flight.airfield_takeoff or "",
+        "AirfieldLanding": flight.airfield_landing or "",
+
+        "TimeTakeOff": _format_time(flight.takeoff_time),
+        "TimeLanding": _format_time(flight.landing_time),
+        "FlightTimeMinutes": flight_time_minutes,
+
+        "LaunchType": _launch_type_for_combination(flight),
+
+        "OriginDataEntry": 3,
+        "OriginDataEntryDesc": "FlightUpdater",
+
+        "ReleaseHeight": flight.tow_release_height_ft or "",
+
+        "TugRegistration": flight.tow_registration or flight.tow_callsign or "",
+        "TugTimeLanding": _format_time(flight.tow_landing_time),
+        "TugTimeMinutes": tug_time_minutes if tug_time_minutes else None,
+
+        "GuestName": guest_name,
+
+        "P1SharePay": p1_share,
+        "P2SharePay": p2_share,
+        "AccCode3pp": third_party_account,
+
+        "Remarks": (flight.remarks or "")[:500],
+    }
 
 def map_aerolog_flight(api_row: dict[str, Any]) -> AerologFlight:
     raw_launch = str(api_row.get("indLaunchType") or "")
