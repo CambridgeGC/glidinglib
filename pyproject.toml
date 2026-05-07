@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "glidinglib"
-version = "0.1.0"
+version = "1.0.0"
 description = ""
 authors = ["Paul Ruskin"]
 packages = [{ include = "glidinglib", from = "src" }]
@@ -9,3 +9,7 @@ packages = [{ include = "glidinglib", from = "src" }]
 python = "^3.13"
 requests = "^2.33.1"
 tzdata = "^2026.2"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
