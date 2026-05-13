@@ -2,7 +2,7 @@ from datetime import date
 from typing import Literal
 import json
 
-from glidinglib.clients.aerolog_flight_client import AerologFlightClient
+from glidinglib.clients.aerolog_client import AerologClient
 from glidinglib.mappers.aerolog_flight_mapper import (
     map_aerolog_flight,
     map_aerolog_flight_to_import_payload,
@@ -42,7 +42,7 @@ class AerologFlightService:
 
         return selected
 
-    def _client_for(self, data_source: DataSource | None = None) -> AerologFlightClient:
+    def _client_for(self, data_source: DataSource | None = None) -> AerologClient:
         aerolog_config = self.config["aerolog"]
         selected = self._resolve_data_source(data_source)
 
@@ -55,7 +55,7 @@ class AerologFlightService:
             email = aerolog_config["test_email"]
             password = aerolog_config.get("test_password", aerolog_config["password"])
 
-        return AerologFlightClient(
+        return AerologClient(
             base_url=base_url,
             email=email,
             password=password,
