@@ -1,6 +1,6 @@
 from typing import Literal
 
-from glidinglib.clients.glidingapp_aircraft_client import GlidingAppAircraftClient
+from glidinglib.clients.glidingapp_client import GlidingAppClient
 from glidinglib.mappers.glidingapp_aircraft_mapper import map_glidingapp_aircraft
 from glidinglib.models.glidingapp_aircraft_model import GlidingAppAircraft
 
@@ -36,7 +36,7 @@ class GlidingAppAircraftService:
     def _client_for(
         self,
         data_source: DataSource | None = None,
-    ) -> GlidingAppAircraftClient:
+    ) -> GlidingAppClient:
         ga_config = self.config["glidingapp"]
         selected = self._resolve_data_source(data_source)
 
@@ -47,7 +47,7 @@ class GlidingAppAircraftService:
             base_url = ga_config["test_server"]
             api_key = ga_config["test_api_key"]
 
-        return GlidingAppAircraftClient(
+        return GlidingAppClient(
             base_url=base_url,
             api_key=api_key,
             timeout=self.timeout,

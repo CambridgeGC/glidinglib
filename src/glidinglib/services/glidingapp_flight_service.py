@@ -1,7 +1,7 @@
 from datetime import date
 from typing import Iterable, Literal
 
-from glidinglib.clients.glidingapp_flight_client import GlidingAppFlightClient
+from glidinglib.clients.glidingapp_client import GlidingAppClient
 from glidinglib.mappers.glidingapp_flight_mapper import map_glidingapp_flight
 from glidinglib.models.glidingapp_flight_model import GlidingAppFlight
 
@@ -34,7 +34,7 @@ class GlidingAppFlightService:
 
         return selected
 
-    def _client_for(self, data_source: DataSource | None = None) -> GlidingAppFlightClient:
+    def _client_for(self, data_source: DataSource | None = None) -> GlidingAppClient:
         ga_config = self.config["glidingapp"]
         selected = self._resolve_data_source(data_source)
 
@@ -45,7 +45,7 @@ class GlidingAppFlightService:
             base_url = ga_config["test_server"]
             api_key = ga_config["test_api_key"]
 
-        return GlidingAppFlightClient(
+        return GlidingAppClient(
             base_url=base_url,
             api_key=api_key,
             timeout=self.timeout,
