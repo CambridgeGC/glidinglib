@@ -1,6 +1,6 @@
 from typing import Iterable, Literal
 
-from glidinglib.clients.glidingapp_account_client import GlidingAppAccountClient
+from glidinglib.clients.glidingapp_client import GlidingAppClient
 from glidinglib.mappers.glidingapp_account_mapper import map_glidingapp_account
 from glidinglib.models.glidingapp_account_model import GlidingAppAccount
 
@@ -36,7 +36,7 @@ class GlidingAppAccountService:
     def _client_for(
         self,
         data_source: DataSource | None = None,
-    ) -> GlidingAppAccountClient:
+    ) -> GlidingAppClient:
         ga_config = self.config["glidingapp"]
         selected = self._resolve_data_source(data_source)
 
@@ -47,7 +47,7 @@ class GlidingAppAccountService:
             base_url = ga_config["test_server"]
             api_key = ga_config["test_api_key"]
 
-        return GlidingAppAccountClient(
+        return GlidingAppClient(
             base_url=base_url,
             api_key=api_key,
             timeout=self.timeout,
