@@ -16,6 +16,13 @@ LAUNCH_METHOD_MAP = {
     "overig": "other",
 }
 
+CATEGORY_MAP = {
+    "prive": "private",
+    "club": "club",
+    "sleep": "tug",
+    "tug": "tug",
+}
+
 
 def _to_int(value: Any, default: int = 0) -> int:
     try:
@@ -37,7 +44,7 @@ def map_glidingapp_aircraft(api_row: dict[str, Any]) -> GlidingAppAircraft:
         flarm_id=str(api_row.get("flarm") or ""),
         aircraft_type=str(api_row.get("type") or ""),
 
-        category=str(api_row.get("category") or ""),
+        category=CATEGORY_MAP.get(str(api_row.get("category") or "").lower(), str(api_row.get("category") or "")),
         configuration=str(api_row.get("configuration") or ""),
 
         pilots=_to_int(api_row.get("pilots")),
