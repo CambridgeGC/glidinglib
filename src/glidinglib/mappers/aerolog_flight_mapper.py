@@ -185,6 +185,19 @@ def map_combination_flight_to_import_payload(
 
     pic_account = flight.pic_membership_number or ""
     p2_account = flight.p2_membership_number or ""
+
+    # testing with zero-padded accounts to see if it helps matching to existing flights in Aerolog
+    # pic_account = (
+    #     f"A{int(flight.pic_membership_number):04d}"
+    #     if flight.pic_membership_number
+    #     else ""
+    # )
+
+    # p2_account = (
+    #     f"A{int(flight.p2_membership_number):04d}"
+    #     if flight.p2_membership_number
+    #     else ""
+    # )    
     payer_account = flight.paying_pilot_membership_number or ""
 
     p1_share, p2_share, third_party_account = _payment_fields(
@@ -210,51 +223,60 @@ def map_combination_flight_to_import_payload(
     )
 
     return {
-        "FlightDate": _format_date(flight.flight_date),
+        "FlightDate": (
+            f"{flight.flight_date.isoformat()}T00:00:00+00:00"
+            if flight.flight_date
+            else None
+        ),
         "SyncKey": flight.sync_key,
 
         "AircraftRegistration": flight.registration or "",
         "AircraftType": _aircraft_type_for_combination(flight),
         "AircraftModel": flight.aircraft_type or "",
 
-        "AccCodeP1": pic_account,
-        "AccCodeP2": p2_account,
+        "AccCodeP1": pic_account or None,
+        "AccCodeP2": p2_account or None,
 
-        "AirfieldTakeOff": flight.airfield_takeoff or "",
-        "AirfieldLanding": flight.airfield_landing or "",
+        "AirfieldTakeOff": flight.airfield_takeoff or None,
+        "AirfieldLanding": flight.airfield_landing or None,
 
-        "TimeTakeOff": _format_time(flight.takeoff_time),
-        "TimeLanding": _format_time(flight.landing_time),
+        "TimeTakeOff": _format_time(flight.takeoff_time) or None,
+        "TimeLanding": _format_time(flight.landing_time) or None,
         "FlightTimeMinutes": flight_time_minutes,
-
+        # "DurationMinutes": flight_time_minutes,
         "LaunchType": _launch_type_for_combination(flight),
 
-        "OriginDataEntry": 3,
+        "OriginDataEntry": "3",
         "OriginDataEntryDesc": "FlightUpdater",
 
-        "ReleaseHeight": flight.tow_release_height_ft or "",
+        "ReleaseHeight": flight.tow_release_height_ft,
 
-        "TugRegistration": flight.tow_registration or flight.tow_callsign or "",
-        "TugTimeLanding": _format_time(flight.tow_landing_time),
+        "TugRegistration": flight.tow_registration or flight.tow_callsign or None,
+        "TugTimeLanding": (
+            _format_time(flight.tow_landing_time)
+            if flight.tow_landing_time
+            else None
+            ),
         "TugTimeMinutes": tug_time_minutes if tug_time_minutes else None,
 
-        "GuestName": guest_name,
+        "GuestName": guest_name or None,
 
-        "P1SharePay": p1_share,
-        "P2SharePay": p2_share,
-        "AccCode3pp": third_party_account,
+        "P1SharePay": p1_share or None,
+        "P2SharePay": p2_share or None,
+        "AccCode3pp": third_party_account or None,
 
-        "Remarks": (flight.remarks or "")[:500],
+        "Remarks": (flight.remarks or "")[:500] or None,
     }
 
 def map_aerolog_flight(api_row: dict[str, Any]) -> AerologFlight:
     raw_launch = str(api_row.get("indLaunchType") or "")
     launch_method = GET_LAUNCH_METHOD_MAP.get(raw_launch, raw_launch)
 
+
     return AerologFlight(
         flight_date=_parse_date(api_row.get("date")),
         sequence_number=_to_int(api_row.get("seqInDate")),
-
+        sync_key = _to_int(api_row.get("syncKey")),
         registration=str(api_row.get("registration") or ""),
         callsign=_normalise_callsign(
             api_row.get("regShort") or api_row.get("registration")
