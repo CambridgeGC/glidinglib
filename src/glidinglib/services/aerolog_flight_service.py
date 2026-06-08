@@ -96,15 +96,11 @@ class AerologFlightService:
     ) -> dict:
         selected = self._resolve_data_source(data_source)
 
-        # payload = [
-        #     map_aerolog_flight_to_import_payload(flight)
-        #     for flight in flights
-        # ]
         payload = [
-            map_combination_flight_to_import_payload(flights[0])
+            map_aerolog_flight_to_import_payload(flight)
+            for flight in flights
         ]
 
-        # Treat either test OR explicit dry_run as no-send with payload output for verification
         if dry_run:
             print()
             print("Aerolog payload (dry run):")
@@ -139,14 +135,11 @@ class AerologFlightService:
     ) -> dict:
         selected = self._resolve_data_source(data_source)
         print(__file__)
-        # payload = [
-        #     map_combination_flight_to_import_payload(flight)
-        #     for flight in flights
-        # ]
         payload = [
-            map_combination_flight_to_import_payload(flights[0])
+            map_combination_flight_to_import_payload(flight)
+            for flight in flights
         ]
-        # breakpoint()
+
         if dry_run:
             return {
                 "status": "dry_run",
