@@ -95,7 +95,7 @@ class AerologFlightService:
         dry_run: bool = True,
     ) -> dict:
         selected = self._resolve_data_source(data_source)
-
+        print("Using send_flight_log_to_aerolog with data_source:", selected)
         payload = [
             map_aerolog_flight_to_import_payload(flight)
             for flight in flights
@@ -135,6 +135,7 @@ class AerologFlightService:
     ) -> dict:
         selected = self._resolve_data_source(data_source)
         print(__file__)
+        print("Using send_combination_flight_log_to_aerolog with data_source:", selected)
         payload = [
             map_combination_flight_to_import_payload(flight)
             for flight in flights

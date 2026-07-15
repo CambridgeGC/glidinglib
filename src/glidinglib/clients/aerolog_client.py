@@ -2,6 +2,7 @@ from datetime import date
 from typing import Any
 
 import requests
+import json
 
 from glidinglib.mappers.aerolog_tech_qualification_mapper import (
     map_aerolog_tech_qualification,
@@ -126,6 +127,41 @@ class AerologClient:
                 headers=self._auth_headers(),
                 timeout=self.timeout,
             )
+
+        print()
+        print("Aerolog HTTP request")
+        print("---------------------")
+        print(f"Method: {resp.request.method}")
+        print(f"URL:    {resp.request.url}")
+
+        print("Headers:")
+        for name, value in resp.request.headers.items():
+            if name.lower() == "authorization":
+                print(f"  {name}: Bearer [hidden]")
+            else:
+                print(f"  {name}: {value}")
+
+        request_body = resp.request.body
+
+        if isinstance(request_body, bytes):
+            request_body = request_body.decode("utf-8")
+
+        print("Body:")
+
+        try:
+            parsed_body = json.loads(request_body)
+            print(
+                json.dumps(
+                    parsed_body,
+                    indent=2,
+                    ensure_ascii=False,
+                )
+            )
+        except (TypeError, json.JSONDecodeError):
+            print(request_body)
+
+        print("---------------------")
+        print()
 
         try:
             resp.raise_for_status()

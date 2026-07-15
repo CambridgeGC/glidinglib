@@ -39,9 +39,9 @@ def main() -> int:
         config = load_config()
         service = AerologFlightService(config)
 
-        test_date = date(2026, 4, 24)
+        test_date = date(2026, 7, 6)
 
-        for data_source in ("config", "live", "test"):
+        for data_source in ("config",):
             print()
             print(f"Fetching Aerolog {data_source} flights for {test_date}...")
 

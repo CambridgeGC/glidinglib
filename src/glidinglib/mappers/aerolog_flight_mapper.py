@@ -228,6 +228,12 @@ def map_combination_flight_to_import_payload(
             if flight.flight_date
             else None
         ),
+        # "FlightDate": (
+        #     flight.flight_date.strftime("%d/%m/%Y")
+        #     if flight.flight_date
+        #     else None
+        # ),
+
         "SyncKey": flight.sync_key,
 
         "AircraftRegistration": flight.registration or "",
