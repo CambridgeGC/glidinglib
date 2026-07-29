@@ -2,6 +2,7 @@ from datetime import date
 from typing import Any
 
 import requests
+import json
 
 from glidinglib.mappers.aerolog_tech_qualification_mapper import (
     map_aerolog_tech_qualification,
@@ -32,6 +33,7 @@ class AerologClient:
             },
             timeout=self.timeout,
         )
+
         resp.raise_for_status()
 
         data = resp.json()
@@ -102,6 +104,79 @@ class AerologClient:
         resp.raise_for_status()
         return resp.json()
 
+    def _post_with_retry(
+        self,
+        path: str,
+        json_payload: Any,
+    ) -> Any:
+        url = f"{self.base_url}{path}"
+
+        resp = self.session.post(
+            url,
+            json=json_payload,
+            headers=self._auth_headers(),
+            timeout=self.timeout,
+        )
+
+        if resp.status_code == 401:
+            self.login()
+
+            resp = self.session.post(
+                url,
+                json=json_payload,
+                headers=self._auth_headers(),
+                timeout=self.timeout,
+            )
+
+        print()
+        print("Aerolog HTTP request")
+        print("---------------------")
+        print(f"Method: {resp.request.method}")
+        print(f"URL:    {resp.request.url}")
+
+        print("Headers:")
+        for name, value in resp.request.headers.items():
+            if name.lower() == "authorization":
+                print(f"  {name}: Bearer [hidden]")
+            else:
+                print(f"  {name}: {value}")
+
+        request_body = resp.request.body
+
+        if isinstance(request_body, bytes):
+            request_body = request_body.decode("utf-8")
+
+        print("Body:")
+
+        try:
+            parsed_body = json.loads(request_body)
+            print(
+                json.dumps(
+                    parsed_body,
+                    indent=2,
+                    ensure_ascii=False,
+                )
+            )
+        except (TypeError, json.JSONDecodeError):
+            print(request_body)
+
+        print("---------------------")
+        print()
+
+        try:
+            resp.raise_for_status()
+
+        except requests.HTTPError as exc:
+            raise RuntimeError(
+                f"Aerolog POST failed\n"
+                f"Status: {resp.status_code}\n"
+                f"URL: {url}\n"
+                f"Response:\n{resp.text}\n\n"
+                f"Payload:\n{json_payload}"
+            ) from exc
+
+        return resp.json()
+
     def get_flight_log_on_period(
         self,
         start_date: date,
@@ -127,8 +202,8 @@ class AerologClient:
         self,
         records: list[dict[str, Any]],
     ) -> dict[str, Any]:
-        return self._put_with_retry(
-            "/api/importFlightLogsFrom3ps",
+        return self._post_with_retry(
+            "/api/Services/ImportFlightLogsFrom3ps",
             records,
         )
 
