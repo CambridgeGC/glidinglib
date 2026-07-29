@@ -74,7 +74,17 @@ class AerologFlightService:
             start_date=start_date,
             end_date=end_date,
         )
-
+        print()
+        print("Raw Aerolog readback:")
+        print(
+            json.dumps(
+                raw_rows,
+                indent=2,
+                ensure_ascii=False,
+                default=str,
+            )
+        )
+        print()
         return [map_aerolog_flight(row) for row in raw_rows or []]
 
     def get_flights_for_date(
@@ -95,14 +105,13 @@ class AerologFlightService:
         dry_run: bool = True,
     ) -> dict:
         selected = self._resolve_data_source(data_source)
-
+        print("Using send_flight_log_to_aerolog with data_source:", selected)
         payload = [
             map_aerolog_flight_to_import_payload(flight)
             for flight in flights
         ]
 
-        # Treat either test OR explicit dry_run as no-send with payload output for verification
-        if selected == "test" or dry_run:
+        if dry_run:
             print()
             print("Aerolog payload (dry run):")
             print(json.dumps(payload, indent=2, ensure_ascii=False))
@@ -135,13 +144,14 @@ class AerologFlightService:
         dry_run: bool = True,
     ) -> dict:
         selected = self._resolve_data_source(data_source)
-
+        print(__file__)
+        print("Using send_combination_flight_log_to_aerolog with data_source:", selected)
         payload = [
             map_combination_flight_to_import_payload(flight)
             for flight in flights
         ]
 
-        if selected == "test" or dry_run:
+        if dry_run:
             return {
                 "status": "dry_run",
                 "sent": False,
@@ -153,6 +163,56 @@ class AerologFlightService:
         client = self._client_for(data_source)
 
         response = client.send_flight_log_to_aerolog(payload)
+        print("Aerolog response:")
+        print(response)
+
+        uploaded_sync_keys = {
+            str(item.get("SyncKey"))
+            for item in payload
+            if item.get("SyncKey") is not None
+        }
+
+        flight_dates = sorted({
+            flight.flight_date
+            for flight in flights
+            if flight.flight_date is not None
+        })
+
+        readback = []
+
+        for flight_date in flight_dates:
+            readback.extend(
+                self.get_flight_log_on_period(
+                    start_date=flight_date,
+                    end_date=flight_date,
+                    data_source=data_source,
+                )
+            )
+
+        print("Readback flights:")
+        for flight in readback[:10]:
+            print(vars(flight))
+
+        readback_sync_keys = {
+            str(getattr(flight, "sync_key", ""))
+            for flight in readback
+            if getattr(flight, "sync_key", None) is not None
+        }
+
+        return {
+            "status": "sent",
+            "sent": True,
+            "record_count": len(payload),
+            "data_source": selected,
+            "payload": payload,
+            "response": response,
+            "uploaded_sync_keys": sorted(uploaded_sync_keys),
+            "readback_record_count": len(readback),
+            "readback_sync_keys": sorted(readback_sync_keys),
+            "missing_after_readback": sorted(
+                uploaded_sync_keys - readback_sync_keys
+            ),
+        }
 
         return {
             "status": "sent",

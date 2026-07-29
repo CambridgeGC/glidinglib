@@ -3,6 +3,9 @@ from typing import Iterable, Literal
 
 from glidinglib.clients.glidingapp_client import GlidingAppClient
 from glidinglib.mappers.glidingapp_flight_mapper import map_glidingapp_flight
+from glidinglib.mappers.glidingapp_flight_write_mapper import (
+    map_glidingapp_flight_to_write_payload,
+)
 from glidinglib.models.glidingapp_flight_model import GlidingAppFlight
 
 
@@ -110,6 +113,82 @@ class GlidingAppFlightService:
             deleted=True,
             data_source=data_source,
         )
+
+    def build_update_payloads(
+        self,
+        flights: Iterable[GlidingAppFlight],
+    ) -> list[dict]:
+        return [
+            map_glidingapp_flight_to_write_payload(flight)
+            for flight in flights
+        ]
+
+    def update_flights(
+        self,
+        flights: Iterable[GlidingAppFlight],
+        data_source: DataSource | None = None,
+        dry_run: bool = False,
+    ) -> dict:
+        payloads = self.build_update_payloads(flights)
+
+        if dry_run:
+            return {
+                "status": "dry_run",
+                "sent": False,
+                "record_count": len(payloads),
+                "payloads": payloads,
+                "succeeded_uuids": [],
+                "errors": [],
+            }
+
+        client = self._client_for(data_source)
+        responses: list[dict] = []
+        errors: list[dict] = []
+        succeeded_uuids: list[str] = []
+
+        for payload in payloads:
+            uuid = str(payload.get("uuid") or "")
+
+            try:
+                response = client.update_flight(payload)
+                responses.append({
+                    "uuid": uuid,
+                    "response": response,
+                })
+                succeeded_uuids.append(uuid)
+            except Exception as exc:
+                response = getattr(exc, "response", None)
+                response_text = ""
+                if response is not None:
+                    try:
+                        response_text = str(response.text or "").strip()
+                    except Exception:
+                        response_text = ""
+
+                error_text = f"{type(exc).__name__}: {exc}"
+                if response_text:
+                    error_text += f" | response: {response_text}"
+
+                errors.append({
+                    "uuid": uuid,
+                    "error": error_text,
+                })
+
+        if errors and succeeded_uuids:
+            status = "partial"
+        elif errors:
+            status = "error"
+        else:
+            status = "ok"
+
+        return {
+            "status": status,
+            "sent": bool(succeeded_uuids),
+            "record_count": len(payloads),
+            "succeeded_uuids": succeeded_uuids,
+            "responses": responses,
+            "errors": errors,
+        }
 
     def get_training_flights(
         self,

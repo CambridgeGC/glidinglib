@@ -38,8 +38,8 @@ class AerologFlight:
     launch_method: str = ""
     raw_launch_method: str = ""
 
-    origin_data_entry: str = "3"
-    origin_data_entry_description: str = "GlidingLib"
+    origin_data_entry: str = ""
+    origin_data_entry_description: str = ""
 
     launch_height_ft: Optional[int] = None
     landing_count: int = 0
