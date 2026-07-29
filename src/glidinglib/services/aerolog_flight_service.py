@@ -74,7 +74,17 @@ class AerologFlightService:
             start_date=start_date,
             end_date=end_date,
         )
-        print(json.dumps(raw_rows[:3], indent=2, default=str))
+        print()
+        print("Raw Aerolog readback:")
+        print(
+            json.dumps(
+                raw_rows,
+                indent=2,
+                ensure_ascii=False,
+                default=str,
+            )
+        )
+        print()
         return [map_aerolog_flight(row) for row in raw_rows or []]
 
     def get_flights_for_date(

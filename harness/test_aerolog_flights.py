@@ -39,7 +39,7 @@ def main() -> int:
         config = load_config()
         service = AerologFlightService(config)
 
-        test_date = date(2026, 7, 6)
+        test_date = date(2026, 7, 4)
 
         for data_source in ("config",):
             print()
