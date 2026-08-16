@@ -106,6 +106,7 @@ def map_glidingapp_flight(api_row: dict) -> GlidingAppFlight:
         block_time_minutes=api_row.get("blocktime", 0),
         motor_end=float(api_row.get("motor_end") or 0.0),
         motor_minutes=float(api_row.get("motor_minutes") or 0.0),
+        launch_height_m=_to_float(api_row.get("height")),
         launch_height_ft=_to_feet(api_row.get("height")),
 
         notes=api_row.get("bijzonderheden", ""),

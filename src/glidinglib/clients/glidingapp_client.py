@@ -22,6 +22,16 @@ class GlidingAppClient:
             "Accept": "application/json",
         }
 
+    @staticmethod
+    def _response_body(response: requests.Response) -> Any:
+        if not response.content:
+            return None
+
+        try:
+            return response.json()
+        except requests.exceptions.JSONDecodeError:
+            return response.text
+
     def _get(
         self,
         path: str,
@@ -34,7 +44,7 @@ class GlidingAppClient:
             timeout=self.timeout,
         )
         response.raise_for_status()
-        return response.json()
+        return self._response_body(response)
 
     def _post(
         self,
@@ -48,7 +58,7 @@ class GlidingAppClient:
             timeout=self.timeout,
         )
         response.raise_for_status()
-        return response.json()
+        return self._response_body(response)
 
     def _put(
         self,
@@ -62,7 +72,7 @@ class GlidingAppClient:
             timeout=self.timeout,
         )
         response.raise_for_status()
-        return response.json()
+        return self._response_body(response)
 
     # ---------------- Accounts ----------------
 
@@ -114,6 +124,16 @@ class GlidingAppClient:
 
         data = self._get("/api/flights.json", params=params)
         return data if isinstance(data, list) else []
+
+    def update_flight(
+        self,
+        payload: dict[str, Any],
+    ) -> Any:
+        """Update a flight using GA's complete-payload PUT endpoint."""
+        if not payload.get("uuid"):
+            raise ValueError("Gliding.App flight update payload has no uuid.")
+
+        return self._put("/api/flights.json", payload)
 
     # ---------------- Competencies ----------------
 

@@ -34,7 +34,7 @@ class GlidingAppFlight:
 
     # Crew
     pic_membership_number: str = ""            # pic_m_id
-    pic_id: int = 0               # gezagvoerder_id
+    pic_id: Optional[int] = None     # gezagvoerder_id
     pic_name: str = ""            # gezagvoerder_naam
 
     p2_membership_number: str = ""   # second_pilot_m_id
@@ -65,7 +65,8 @@ class GlidingAppFlight:
     block_time_minutes: int = 0                # blocktime
     motor_end: float = 0.0
     motor_minutes: float = 0.0
-    launch_height_ft: Optional[float] = None    # height
+    launch_height_m: Optional[float] = None     # raw GA height in metres
+    launch_height_ft: Optional[float] = None    # display/edit height in feet
 
     # Timing
     takeoff_time: Optional[time] = None        # start_tijd
