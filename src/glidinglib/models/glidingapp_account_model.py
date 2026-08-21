@@ -21,6 +21,7 @@ class GlidingAppAccount:
 
     phone: str = ""
     groups: list[str] = field(default_factory=list)
+    raw_groups: list[str] = field(default_factory=list)
 
     home_club: Any = None
     extra: dict[str, Any] = field(default_factory=dict)

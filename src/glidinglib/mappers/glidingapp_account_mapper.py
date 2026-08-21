@@ -59,9 +59,15 @@ def _translate_group(group: str) -> str:
 def map_glidingapp_account(api_row: dict[str, Any]) -> GlidingAppAccount:
     data = api_row.get("data") or {}
 
-    groups = [
-        _translate_group(str(group))
+    raw_groups = [
+        str(group).strip().lower()
         for group in api_row.get("groups") or []
+        if group is not None
+    ]
+
+    groups = [
+        _translate_group(group)
+        for group in raw_groups
     ]
 
     return GlidingAppAccount(
@@ -81,6 +87,7 @@ def map_glidingapp_account(api_row: dict[str, Any]) -> GlidingAppAccount:
 
         phone=str(api_row.get("phone") or ""),
         groups=groups,
+        raw_groups=raw_groups,
 
         home_club=api_row.get("home_club"),
         extra=api_row.get("extra") or {},

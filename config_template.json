@@ -24,5 +24,57 @@
                         "herts scouts", 
                         "nominal", 
                         "temporary"]
+  },
+  "permissions": {
+    "roles": {
+      "admin": [
+        "admin",
+        "committee",
+        "bestuur"
+      ],
+      "duty_officer": [
+        "instructor",
+        "instructeur",
+        "launch director",
+        "startleider",
+        "admin",
+        "committee",
+        "bestuur"
+      ]
+    },
+    "pages": {
+      "dashboard": ["*"],
+      "flight_editor": ["duty_officer"],
+      "ktrax_radar": ["*"],
+      "aerolog_list": ["*"],
+      "aerolog_upload": [
+        "instructor",
+        "instructeur",
+        "admin",
+        "committee",
+        "bestuur"
+      ],
+      "admin_settings": [
+        "admin",
+        "committee",
+        "bestuur"
+      ]
+    },
+    "capabilities": {
+      "can_view_logs": ["*"],
+      "can_edit_flights": ["duty_officer"],
+      "can_upload_aerolog": [
+        "instructor",
+        "instructeur",
+        "admin",
+        "committee",
+        "bestuur"
+      ],
+      "can_modify_club_settings": [
+        "admin",
+        "committee",
+        "bestuur"
+      ]
+    }
   }
 } 
