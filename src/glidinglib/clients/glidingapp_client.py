@@ -187,3 +187,23 @@ class GlidingAppClient:
                 "id": competency_id,
             },
         )
+
+    def fetch_flights_for_member(
+        self,
+        member_id: int | str,
+    ) -> list[dict[str, Any]]:
+        data = self._get(f"/api/flights/{member_id}/user.json")
+        return data if isinstance(data, list) else []
+
+    def update_account_groups(
+        self,
+        account_id: int | str,
+        groups: list[str],
+    ) -> Any:
+        return self._put(
+            f"/api/accounts/{account_id}.json",
+            {
+                "groups": groups,
+            },
+        )
+

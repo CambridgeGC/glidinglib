@@ -209,26 +209,50 @@ class AerologClient:
 
     def get_members_tech_qualif(
         self,
-        start_account: int | str,
+        start_account: int | str = 1,
         end_account: int | str | None = None,
     ):
         if end_account is None:
             end_account = start_account
 
+        is_single_account = str(start_account).strip() == str(end_account).strip()
+
+        # Aerolog SQL API performs string/lexicographical comparisons on Account numbers
+        # (e.g. '1' to '100' excludes '15' because '15' > '100').
+        # When querying ranges, fetch wide range ("0" to "999999") and filter numerically in Python.
+        if is_single_account:
+            api_start = str(start_account).strip()
+            api_end = str(end_account).strip()
+        else:
+            api_start = "0"
+            api_end = "999999"
+
         payload = self._get_with_retry(
             "/api/Services/GetMembersTechQualif",
             {
-                "StartAccount": start_account,
-                "EndAccount": end_account,
+                "StartAccount": api_start,
+                "EndAccount": api_end,
             },
         )
 
         rows = self._extract_tech_qualif_rows(payload)
-
-        return [
+        mapped_quals = [
             map_aerolog_tech_qualification(row)
             for row in rows
         ]
+
+        if not is_single_account:
+            try:
+                s_int = int(start_account)
+                e_int = int(end_account)
+                mapped_quals = [
+                    q for q in mapped_quals
+                    if q.account and str(q.account).strip().isdigit() and s_int <= int(str(q.account).strip()) <= e_int
+                ]
+            except (ValueError, TypeError):
+                pass
+
+        return mapped_quals
 
     def _extract_tech_qualif_rows(
         self,
@@ -279,3 +303,62 @@ class AerologClient:
 
         walk(payload)
         return result
+
+    def get_memberships_on_period(
+        self,
+        start_date: date | str,
+        end_date: date | str,
+    ) -> list[dict[str, Any]]:
+        sd_str = start_date.isoformat() if isinstance(start_date, date) else str(start_date)
+        ed_str = end_date.isoformat() if isinstance(end_date, date) else str(end_date)
+        payload = self._get_with_retry(
+            "/api/Services/GetMembershipOnPeriod",
+            {
+                "StartDate": sd_str,
+                "EndDate": ed_str,
+            },
+        )
+        if isinstance(payload, dict):
+            return payload.get("data") or []
+        if isinstance(payload, list):
+            return payload
+        return []
+
+    def get_members_contact_details(
+        self,
+        start_account: int | str = 1,
+        end_account: int | str = 999999,
+    ) -> list[dict[str, Any]]:
+        is_single_account = str(start_account).strip() == str(end_account).strip()
+        if is_single_account:
+            api_start = str(start_account).strip()
+            api_end = str(end_account).strip()
+        else:
+            api_start = "0"
+            api_end = "999999"
+
+        payload = self._get_with_retry(
+            "/api/Services/GetMembersContactDetails",
+            {
+                "StartAccount": api_start,
+                "EndAccount": api_end,
+            },
+        )
+        items = payload.get("data") if isinstance(payload, dict) else payload
+        if not isinstance(items, list):
+            return []
+
+        if not is_single_account:
+            try:
+                s_int = int(start_account)
+                e_int = int(end_account)
+                filtered = []
+                for it in items:
+                    acc_str = str(it.get("account") or it.get("Account") or "").strip()
+                    if acc_str.isdigit() and s_int <= int(acc_str) <= e_int:
+                        filtered.append(it)
+                return filtered
+            except (ValueError, TypeError):
+                pass
+
+        return items

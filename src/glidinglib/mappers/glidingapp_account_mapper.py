@@ -19,9 +19,17 @@ GROUP_TRANSLATION_MAP = {
 
     # Qualifications / status
     "brevet": "licensed pilot",
+    "solist": "solo pilot",
+    "dbo": "student",
+    "basic_instructor": "basic instructor",
+    "bi": "basic instructor",
+    "guest instructor": "guest instructor",
+    "scout pilot": "scout pilot",
+    "niet_vliegend": "non-flying",
 
     # Duty / ops roles
-
+    "clubhuis": "clubhouse",
+    "email test": "email test",
 
     # Admin / organisational
     "admin": "admin",
@@ -40,6 +48,7 @@ GROUP_TRANSLATION_MAP = {
 }
 
 
+
 def _parse_datetime(value: Any) -> Optional[datetime]:
     if not value:
         return None
@@ -52,8 +61,16 @@ def _parse_date(value: Any) -> Optional[date]:
     return date.fromisoformat(str(value)[:10])
 
 
+def translate_group(group: str) -> str:
+    if not group:
+        return ""
+    g_clean = str(group).strip().lower()
+    return GROUP_TRANSLATION_MAP.get(g_clean, group)
+
+
 def _translate_group(group: str) -> str:
-    return GROUP_TRANSLATION_MAP.get(group, group)
+    return translate_group(group)
+
 
 
 def map_glidingapp_account(api_row: dict[str, Any]) -> GlidingAppAccount:
