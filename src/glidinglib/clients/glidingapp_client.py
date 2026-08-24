@@ -10,18 +10,22 @@ class GlidingAppClient:
         base_url: str,
         api_key: str,
         timeout: int = 30,
+        app_name: str = "GlidingLib",
+        user_agent: Optional[str] = None,
     ):
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
         self.timeout = timeout
+        self.app_name = app_name
+        self.user_agent = user_agent or f"{app_name}/1.0.0"
         self.session = requests.Session()
 
     def _headers(self) -> dict[str, str]:
         return {
             "X-API-KEY": self.api_key,
             "Accept": "application/json",
-            "User-Agent": "FlightUpdater/3.0.3",
-            "X-App-Name": "FlightUpdater",
+            "User-Agent": self.user_agent,
+            "X-App-Name": self.app_name,
         }
 
     @staticmethod

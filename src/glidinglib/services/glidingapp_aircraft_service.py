@@ -14,10 +14,14 @@ class GlidingAppAircraftService:
         config: dict,
         default_data_source: DataSource = "config",
         timeout: int = 30,
+        app_name: str | None = None,
+        user_agent: str | None = None,
     ):
         self.config = config
         self.default_data_source = default_data_source
         self.timeout = timeout
+        self.app_name = app_name or config.get("app_name") or config.get("glidingapp", {}).get("app_name") or "GlidingLib"
+        self.user_agent = user_agent or config.get("user_agent") or config.get("glidingapp", {}).get("user_agent")
 
     def _resolve_data_source(self, data_source: DataSource | None = None) -> str:
         selected = data_source or self.default_data_source
@@ -51,6 +55,8 @@ class GlidingAppAircraftService:
             base_url=base_url,
             api_key=api_key,
             timeout=self.timeout,
+            app_name=self.app_name,
+            user_agent=self.user_agent,
         )
 
     def get_aircraft(

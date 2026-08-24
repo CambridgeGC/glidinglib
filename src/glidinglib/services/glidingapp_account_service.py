@@ -16,11 +16,15 @@ class GlidingAppAccountService:
         default_data_source: DataSource = "config",
         timeout: int = 30,
         cache_ttl_seconds: int = 300,
+        app_name: str | None = None,
+        user_agent: str | None = None,
     ):
         self.config = config
         self.default_data_source = default_data_source
         self.timeout = timeout
         self.cache_ttl_seconds = cache_ttl_seconds
+        self.app_name = app_name or config.get("app_name") or config.get("glidingapp", {}).get("app_name") or "GlidingLib"
+        self.user_agent = user_agent or config.get("user_agent") or config.get("glidingapp", {}).get("user_agent")
         self._cache: dict[str, tuple[float, list[GlidingAppAccount]]] = {}
 
     def _resolve_data_source(self, data_source: DataSource | None = None) -> str:
@@ -55,6 +59,8 @@ class GlidingAppAccountService:
             base_url=base_url,
             api_key=api_key,
             timeout=self.timeout,
+            app_name=self.app_name,
+            user_agent=self.user_agent,
         )
 
     def clear_cache(self, data_source: DataSource | None = None) -> None:
