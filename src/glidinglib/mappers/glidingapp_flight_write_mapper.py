@@ -88,8 +88,6 @@ def map_glidingapp_flight_to_write_payload(
         "bijzonderheden": flight.notes or "",
     }
 
-    if flight.igc_path:
-        payload["igc"] = flight.igc_path
     if flight.voucher:
         payload["voucher"] = flight.voucher
 
