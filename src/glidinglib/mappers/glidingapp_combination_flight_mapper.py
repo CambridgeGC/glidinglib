@@ -94,6 +94,9 @@ def map_glidingapp_flight_to_combination_flight(
         airfield_landing=flight.arrival_airfield,
         remarks=flight.notes,
         category=flight.category,
+        is_fis=bool(getattr(flight, "is_flight_instruction", False)),
+        is_training=bool(getattr(flight, "is_training", False)),
+        is_profcheck=bool(getattr(flight, "is_proficiency_check", False)),
     )
 
     if tow_flight is not None:

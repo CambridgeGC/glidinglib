@@ -50,6 +50,9 @@ class CombinationFlight:
     runway_landing: str = ""
     category: str = ""
     remarks: str = ""
+    is_fis: bool = False
+    is_training: bool = False
+    is_profcheck: bool = False
 
     # --- helpers (domain-safe, not UI) ---
     def is_aerotow(self) -> bool:

@@ -154,27 +154,53 @@ def _launch_type_for_combination(flight: CombinationFlight) -> str:
     return PUT_LAUNCH_METHOD_MAP.get(launch, launch)
 
 
+CATEGORY_PAYER_MAP = {
+    "trial flight": "1002",
+    "city uni": "1225",
+    "scouts": "1099",
+}
+
+
 def _payment_fields(
     pic_account: str,
     p2_account: str,
     payer_account: str,
-) -> tuple[Any, Any, str]:
+    category: str = "",
+) -> tuple[Optional[int], Optional[int], Optional[str]]:
+    cat_norm = (category or "").strip().lower()
+    payer_norm = (payer_account or "").strip().lower()
+
+    # 1. Check SplitCost (by category or payer)
+    if cat_norm in {"splitcost", "split cost", "split_cost", "split-cost"} or payer_norm in {"splitcost", "split cost", "split_cost", "split-cost"}:
+        return 50, 50, None
+
+    # 2. Check mapped categories
+    if cat_norm in CATEGORY_PAYER_MAP:
+        return None, None, CATEGORY_PAYER_MAP[cat_norm]
+
+    # 3. Check if payer is a mapped category name
+    if payer_norm in CATEGORY_PAYER_MAP:
+        return None, None, CATEGORY_PAYER_MAP[payer_norm]
+
+    # 4. Check if payer matches an account code in CATEGORY_PAYER_MAP values
+    for code in CATEGORY_PAYER_MAP.values():
+        if (payer_account or "").strip() == code:
+            return None, None, code
+
     pic_account = (pic_account or "").strip()
     p2_account = (p2_account or "").strip()
     payer_account = (payer_account or "").strip()
 
-    p1_share = ""
-    p2_share = ""
-    third_party = ""
+    # 5. Check if payer is P2
+    if payer_account and p2_account and payer_account == p2_account:
+        return 0, 100, None
 
-    if payer_account and pic_account and payer_account == pic_account:
-        p1_share = 100
-    elif payer_account and p2_account and payer_account == p2_account:
-        p2_share = 100
-    elif payer_account:
-        third_party = payer_account
+    # 6. Check if payer is third-party account
+    if payer_account and payer_account != pic_account and payer_account != p2_account:
+        return None, None, payer_account
 
-    return p1_share, p2_share, third_party
+    # 7. Default: PIC pays 100%
+    return 100, 0, None
 
 
 def map_combination_flight_to_import_payload(
@@ -204,6 +230,7 @@ def map_combination_flight_to_import_payload(
         pic_account=pic_account,
         p2_account=p2_account,
         payer_account=payer_account,
+        category=flight.category,
     )
 
     guest_name = ""
