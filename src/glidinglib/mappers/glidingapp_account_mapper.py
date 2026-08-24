@@ -19,8 +19,9 @@ GROUP_TRANSLATION_MAP = {
 
     # Qualifications / status
     "brevet": "licensed pilot",
-    "solist": "solo pilot",
+    "solist": "solo",
     "dbo": "student",
+
     "basic_instructor": "basic instructor",
     "bi": "basic instructor",
     "guest instructor": "guest instructor",

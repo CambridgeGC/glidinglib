@@ -20,6 +20,8 @@ class GlidingAppClient:
         return {
             "X-API-KEY": self.api_key,
             "Accept": "application/json",
+            "User-Agent": "FlightUpdater/3.0.3",
+            "X-App-Name": "FlightUpdater",
         }
 
     @staticmethod
@@ -204,6 +206,18 @@ class GlidingAppClient:
             f"/api/accounts/{account_id}.json",
             {
                 "groups": groups,
+            },
+        )
+
+    def archive_account(
+        self,
+        account_id: int | str,
+    ) -> Any:
+        return self._put(
+            "/api/accounts.json",
+            {
+                "id": account_id,
+                "is_active": False,
             },
         )
 
