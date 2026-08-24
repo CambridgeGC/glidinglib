@@ -54,22 +54,22 @@ def _parse_time(value: Any):
     return datetime.strptime(str(value), "%H:%M").time()
 
 
-def _height_ft_from_metres(value: Any) -> Optional[int]:
+def _round_height_ft(value: Any) -> Optional[int]:
     if value in (None, "", 0):
         return None
 
     try:
-        feet = float(value) * 3.28084
+        feet = float(value)
         return int(round(feet / 100) * 100)
     except (TypeError, ValueError):
         return None
 
 
-def _height_m(value: Any) -> Optional[float]:
+def _height_m_from_feet(value: Any) -> Optional[float]:
     if value in (None, "", 0):
         return None
     try:
-        return float(value)
+        return float(value) / 3.28084
     except (TypeError, ValueError):
         return None
 
@@ -140,8 +140,8 @@ def map_ktrax_flight(
         takeoff_time=_parse_time((api_row.get("tkof") or {}).get("time")),
         landing_time=_parse_time((api_row.get("ldg") or {}).get("time")),
 
-        launch_height_m=_height_m(dalt),
-        launch_height_ft=_height_ft_from_metres(dalt),
+        launch_height_m=_height_m_from_feet(dalt),
+        launch_height_ft=_round_height_ft(dalt),
 
         pic_name=_person_name(api_row.get("p1")),
         pic_membership_number=_person_number(api_row.get("p1")),
