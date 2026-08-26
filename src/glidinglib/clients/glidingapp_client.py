@@ -157,6 +157,13 @@ class GlidingAppClient:
         )
         return data if isinstance(data, list) else []
 
+    def fetch_user_recency(
+        self,
+        user_id: int | str,
+    ) -> dict[str, Any]:
+        data = self._get(f"/api/competencies/{user_id}/recency.json")
+        return data if isinstance(data, dict) else {}
+
     def assign_competency(
         self,
         user_id: int | str,

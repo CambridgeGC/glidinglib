@@ -1,6 +1,7 @@
+import json
+import logging
 from datetime import date
 from typing import Literal
-import json
 
 from glidinglib.clients.aerolog_client import AerologClient
 from glidinglib.mappers.aerolog_flight_mapper import (
@@ -13,6 +14,8 @@ from glidinglib.models.aerolog_flight_model import AerologFlight
 from glidinglib.mappers.glidingapp_combination_flight_mapper import (
     map_glidingapp_flights_to_combination_flights,
 )
+
+logger = logging.getLogger(__name__)
 
 DataSource = Literal["live", "test", "config"]
 
@@ -74,17 +77,11 @@ class AerologFlightService:
             start_date=start_date,
             end_date=end_date,
         )
-        print()
-        print("Raw Aerolog readback:")
-        print(
-            json.dumps(
-                raw_rows,
-                indent=2,
-                ensure_ascii=False,
-                default=str,
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                "Raw Aerolog readback: %s",
+                json.dumps(raw_rows, indent=2, ensure_ascii=False, default=str),
             )
-        )
-        print()
         return [map_aerolog_flight(row) for row in raw_rows or []]
 
     def get_flights_for_date(
@@ -105,17 +102,14 @@ class AerologFlightService:
         dry_run: bool = True,
     ) -> dict:
         selected = self._resolve_data_source(data_source)
-        print("Using send_flight_log_to_aerolog with data_source:", selected)
+        logger.info("Using send_flight_log_to_aerolog with data_source: %s", selected)
         payload = [
             map_aerolog_flight_to_import_payload(flight)
             for flight in flights
         ]
 
         if dry_run:
-            print()
-            print("Aerolog payload (dry run):")
-            print(json.dumps(payload, indent=2, ensure_ascii=False))
-            print()
+            logger.debug("Aerolog payload (dry run): %s", json.dumps(payload, indent=2, ensure_ascii=False))
 
             return {
                 "status": "dry_run",
@@ -144,8 +138,7 @@ class AerologFlightService:
         dry_run: bool = True,
     ) -> dict:
         selected = self._resolve_data_source(data_source)
-        print(__file__)
-        print("Using send_combination_flight_log_to_aerolog with data_source:", selected)
+        logger.info("Using send_combination_flight_log_to_aerolog with data_source: %s", selected)
         payload = [
             map_combination_flight_to_import_payload(flight)
             for flight in flights
@@ -163,8 +156,7 @@ class AerologFlightService:
         client = self._client_for(data_source)
 
         response = client.send_flight_log_to_aerolog(payload)
-        print("Aerolog response:")
-        print(response)
+        logger.debug("Aerolog response: %s", response)
 
         uploaded_sync_keys = {
             str(item.get("SyncKey"))
@@ -189,9 +181,9 @@ class AerologFlightService:
                 )
             )
 
-        print("Readback flights:")
-        for flight in readback[:10]:
-            print(vars(flight))
+        if logger.isEnabledFor(logging.DEBUG):
+            for flight in readback[:10]:
+                logger.debug("Readback flight: %s", vars(flight))
 
         readback_sync_keys = {
             str(getattr(flight, "sync_key", ""))
@@ -212,13 +204,4 @@ class AerologFlightService:
             "missing_after_readback": sorted(
                 uploaded_sync_keys - readback_sync_keys
             ),
-        }
-
-        return {
-            "status": "sent",
-            "sent": True,
-            "record_count": len(payload),
-            "data_source": selected,
-            "payload": payload,
-            "response": response,
         }

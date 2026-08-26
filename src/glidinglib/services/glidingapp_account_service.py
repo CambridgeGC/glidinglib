@@ -3,7 +3,9 @@ from typing import Iterable, Literal, Optional
 
 from glidinglib.clients.glidingapp_client import GlidingAppClient
 from glidinglib.mappers.glidingapp_account_mapper import map_glidingapp_account
+from glidinglib.mappers.glidingapp_recency_mapper import map_glidingapp_recency
 from glidinglib.models.glidingapp_account_model import GlidingAppAccount
+from glidinglib.models.glidingapp_recency_model import GlidingAppUserRecency
 
 
 DataSource = Literal["live", "test", "config"]
@@ -133,3 +135,12 @@ class GlidingAppAccountService:
             if account.email and account.email.strip().lower() == clean_email:
                 return account
         return None
+
+    def get_user_recency(
+        self,
+        user_id: int | str,
+        data_source: DataSource | None = None,
+    ) -> GlidingAppUserRecency:
+        client = self._client_for(data_source)
+        raw_recency = client.fetch_user_recency(user_id)
+        return map_glidingapp_recency(raw_recency)
