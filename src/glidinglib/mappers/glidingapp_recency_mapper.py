@@ -10,9 +10,13 @@ from glidinglib.models.glidingapp_recency_model import (
 CURRENCY_TRANSLATION_MAP = {
     "groen": "green",
     "oranje": "amber",
+    "geel": "amber",
+    "yellow": "amber",
     "rood": "red",
     "blauw": "blue",
     "grijs": "grey",
+    "nvt": "n/k",
+    "n.v.t.": "n/k",
 }
 
 LAUNCH_METHOD_MAP = {
@@ -70,6 +74,7 @@ def map_glidingapp_recency_detail(raw_rec: dict[str, Any]) -> GlidingAppRecencyD
         fis_status=str(raw_rec.get("fis") or ""),
         is_instructor=bool(raw_rec.get("is_instructor", False)),
         is_fes=bool(raw_rec.get("is_fes", False)),
+        tmg_exemption=str(raw_rec.get("tmg_excemption") or raw_rec.get("tmg_exemption") or "").strip().lower(),
 
         starts=_to_int(raw_rec.get("starts")),
         winch_starts=_to_int(raw_rec.get("lier")),

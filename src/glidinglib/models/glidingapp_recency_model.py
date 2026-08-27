@@ -16,6 +16,7 @@ class GlidingAppRecencyDetail:
     fis_status: str = ""
     is_instructor: bool = False
     is_fes: bool = False
+    tmg_exemption: str = ""
 
     # Launch totals
     starts: int = 0
