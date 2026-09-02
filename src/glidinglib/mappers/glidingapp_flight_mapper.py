@@ -8,12 +8,14 @@ LAUNCH_METHOD_MAP = {
     "lier": "winch",
     "sleep": "aerotow",
     "zelf": "self-launch",
+    "zelfstart": "self-launch",
     "tmg": "tmg",
     "tmg-a": "tmg-aerotow",
     "sep": "sep",
     "sep-a": "sep-aerotow",
     "car": "car",
     "bungee": "bungee",
+    "elastiek": "bungee",
     "overig": "other",
 }
 
