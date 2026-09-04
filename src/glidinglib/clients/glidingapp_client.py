@@ -204,8 +204,15 @@ class GlidingAppClient:
     def fetch_flights_for_member(
         self,
         member_id: int | str,
+        year: int | str | None = None,
+        date_str: str | None = None,
     ) -> list[dict[str, Any]]:
-        data = self._get(f"/api/flights/{member_id}/user.json")
+        params: dict[str, Any] = {}
+        if year is not None:
+            params["year"] = str(year)
+        if date_str is not None:
+            params["date"] = date_str
+        data = self._get(f"/api/flights/{member_id}/user.json", params=params)
         return data if isinstance(data, list) else []
 
     def update_account_groups(
